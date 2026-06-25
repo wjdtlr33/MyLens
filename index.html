@@ -192,7 +192,7 @@ let searchBase64 = null;
 let regImages = []; // [{base64, preview}]
 let API_KEY = '';
 const MAX_PHOTOS = 5;
-const CANDIDATE_COUNT = 5;
+const CANDIDATE_COUNT = 8;
 
 function init() {
   API_KEY = localStorage.getItem('mylens_api_key') || '';
@@ -397,7 +397,9 @@ async function runSearch() {
     btn.textContent = '🔍 비교 중... (2/2)';
     const content = [
       { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: searchBase64 } },
-      { type: 'text', text: `이것이 검색 이미지야. 아래 ${candidates.length}개 항목 이미지들과 비교해서 유사도를 0~100으로 평가해줘. JSON 배열만 출력해: [{"idx":0,"score":85},{"idx":1,"score":40},...] 형태로.` }
+      { type: 'text', text: `검색 이미지와 아래 ${candidates.length}개 항목을 비교해 같은 물건인지 판단해줘.
+기준: 같은 물건(각도/조명만 다름)=90~100, 같은 종류지만 차이 있음=60~89, 비슷하지만 다른 물건=30~59, 다른 물건=0~29.
+JSON 배열만 출력: [{"idx":0,"score":95},...]` }
     ];
     candidates.forEach((item, i) => {
       const imgSrc = item.images && item.images[0];
