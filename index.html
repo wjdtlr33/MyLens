@@ -12,9 +12,8 @@
   <title>MyLens</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #1a1a1a; max-width: 480px; margin: 0 auto; min-height: 100vh; background: #fff; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #1a1a1a; max-width: 480px; margin: 0 auto; min-height: 100vh; background: #fff; }
 
-    /* 설정 화면 */
     #settings-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 32px 24px; }
     #settings-screen h1 { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
     #settings-screen p { font-size: 14px; color: #666; text-align: center; margin-bottom: 32px; line-height: 1.6; }
@@ -22,52 +21,55 @@
     .api-input-wrap label { font-size: 13px; color: #444; display: block; margin-bottom: 6px; }
     .api-input-wrap input { width: 100%; padding: 12px 14px; border: 1px solid #ddd; border-radius: 10px; font-size: 14px; }
 
-    /* 앱 레이아웃 */
     #app { display: none; flex-direction: column; min-height: 100vh; }
     .header { padding: 16px 20px 12px; border-bottom: 0.5px solid #e5e5e5; }
     .header h1 { font-size: 18px; font-weight: 600; }
-    .content { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 80px; }
+    .content { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 88px; }
     .tab-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; display: flex; background: #fff; border-top: 0.5px solid #e5e5e5; padding-bottom: env(safe-area-inset-bottom); }
     .tab { flex: 1; padding: 10px 8px 8px; text-align: center; font-size: 11px; color: #999; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; }
     .tab svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
     .tab.active { color: #1a1a1a; }
 
-    /* 화면 전환 */
     .screen { display: none; }
     .screen.active { display: block; }
 
-    /* 공통 컴포넌트 */
     .card { background: #fff; border: 0.5px solid #e5e5e5; border-radius: 14px; padding: 16px 18px; margin-bottom: 12px; }
     .btn { width: 100%; padding: 13px; border-radius: 10px; font-size: 15px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.15s; border: none; }
     .btn:active { opacity: 0.7; }
     .btn.primary { background: #1a1a1a; color: #fff; }
     .btn.secondary { background: #f0f0f0; color: #1a1a1a; }
+    .btn.ghost { background: none; border: 1px solid #ddd; color: #555; padding: 8px 14px; width: auto; font-size: 13px; }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    .camera-box { border: 1.5px dashed #ccc; border-radius: 12px; padding: 36px 20px; text-align: center; cursor: pointer; transition: background 0.15s; }
+    .camera-box { border: 1.5px dashed #ccc; border-radius: 12px; padding: 28px 20px; text-align: center; cursor: pointer; transition: background 0.15s; }
     .camera-box:active { background: #f5f5f5; }
-    .camera-box .icon { font-size: 36px; margin-bottom: 8px; }
+    .camera-box .icon { font-size: 32px; margin-bottom: 6px; }
     .camera-box p { font-size: 13px; color: #888; }
 
-    .preview-img { width: 100%; height: 200px; object-fit: cover; border-radius: 10px; border: 0.5px solid #e5e5e5; }
+    /* 다중 이미지 썸네일 */
+    .img-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .img-thumb-wrap { position: relative; width: 80px; height: 80px; }
+    .img-thumb-wrap img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 0.5px solid #e5e5e5; }
+    .img-thumb-wrap .del-btn { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; background: #1a1a1a; color: #fff; border: none; border-radius: 50%; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
+    .add-photo-btn { width: 80px; height: 80px; border: 1.5px dashed #ccc; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-size: 22px; color: #bbb; gap: 2px; background: none; }
+    .add-photo-btn span { font-size: 10px; color: #bbb; }
 
     input[type="text"], textarea { width: 100%; padding: 11px 13px; border: 1px solid #ddd; border-radius: 10px; font-size: 14px; color: #1a1a1a; background: #fff; -webkit-appearance: none; }
     input[type="text"]:focus, textarea:focus { outline: none; border-color: #1a1a1a; }
-    textarea { resize: none; height: 72px; line-height: 1.5; }
+    textarea { resize: none; height: 68px; line-height: 1.5; }
     .form-label { font-size: 13px; color: #555; display: block; margin-bottom: 5px; }
     .form-group { margin-bottom: 14px; }
 
-    /* 목록 */
-    .part-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 0.5px solid #f0f0f0; }
-    .part-item:last-child { border-bottom: none; }
-    .part-thumb { width: 52px; height: 52px; border-radius: 10px; border: 0.5px solid #e5e5e5; object-fit: cover; background: #f5f5f5; display: flex; align-items: center; justify-content: center; font-size: 22px; overflow: hidden; flex-shrink: 0; }
-    .part-thumb img { width: 100%; height: 100%; object-fit: cover; }
-    .part-info { flex: 1; min-width: 0; }
-    .part-name { font-size: 14px; font-weight: 500; }
-    .part-desc { font-size: 12px; color: #888; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 0.5px solid #f0f0f0; }
+    .item-row:last-child { border-bottom: none; }
+    .item-thumb { width: 52px; height: 52px; border-radius: 10px; border: 0.5px solid #e5e5e5; object-fit: cover; background: #f5f5f5; display: flex; align-items: center; justify-content: center; font-size: 22px; overflow: hidden; flex-shrink: 0; }
+    .item-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .item-info { flex: 1; min-width: 0; }
+    .item-name { font-size: 14px; font-weight: 500; }
+    .item-desc { font-size: 12px; color: #888; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-photos { font-size: 11px; color: #bbb; margin-top: 2px; }
     .delete-btn { background: none; border: none; cursor: pointer; color: #bbb; padding: 6px; font-size: 18px; }
 
-    /* 검색 결과 */
     .result-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 0.5px solid #f0f0f0; }
     .result-item:last-child { border-bottom: none; }
     .result-thumb { width: 60px; height: 60px; border-radius: 10px; border: 0.5px solid #e5e5e5; object-fit: cover; background: #f5f5f5; display: flex; align-items: center; justify-content: center; font-size: 26px; overflow: hidden; flex-shrink: 0; }
@@ -75,52 +77,46 @@
     .result-info { flex: 1; min-width: 0; }
     .result-name { font-size: 14px; font-weight: 500; }
     .result-desc { font-size: 12px; color: #888; margin-top: 2px; }
-    .score-wrap { margin-top: 6px; }
-    .score-bar { height: 4px; border-radius: 2px; background: #f0f0f0; }
-    .score-fill { height: 100%; border-radius: 2px; background: #1a1a1a; }
+    .score-bar { height: 4px; border-radius: 2px; background: #f0f0f0; margin-top: 6px; }
+    .score-fill { height: 100%; border-radius: 2px; }
     .score-text { font-size: 11px; color: #888; margin-top: 3px; }
 
-    /* 로딩 */
-    .loading { text-align: center; padding: 32px 20px; color: #888; font-size: 14px; }
-    .spinner { width: 28px; height: 28px; border: 2px solid #e5e5e5; border-top-color: #1a1a1a; border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 12px; }
+    .spinner { width: 24px; height: 24px; border: 2px solid #e5e5e5; border-top-color: #1a1a1a; border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 10px; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .empty { text-align: center; padding: 48px 20px; color: #aaa; font-size: 14px; line-height: 1.8; }
-    .empty .icon { font-size: 44px; display: block; margin-bottom: 12px; }
-
+    .empty { text-align: center; padding: 40px 20px; color: #aaa; font-size: 14px; line-height: 1.8; }
+    .empty .icon { font-size: 40px; display: block; margin-bottom: 10px; }
     .badge { display: inline-block; font-size: 12px; padding: 2px 10px; border-radius: 20px; background: #f0f0f0; color: #555; }
-
     .section-title { font-size: 13px; font-weight: 500; color: #888; margin-bottom: 10px; }
+    .preview-img { width: 100%; height: 180px; object-fit: cover; border-radius: 10px; border: 0.5px solid #e5e5e5; }
+    .status-msg { font-size: 13px; color: #888; text-align: center; margin-top: 8px; }
   </style>
 </head>
 <body>
 
-<!-- API 키 설정 화면 -->
 <div id="settings-screen">
-  <div style="font-size: 48px; margin-bottom: 16px;">🔧</div>
+  <div style="font-size:48px; margin-bottom:16px;">🔍</div>
   <h1>MyLens</h1>
-  <p>처음 사용 시 Claude API 키를 입력해주세요.<br>키는 기기에만 저장되며 외부로 전송되지 않아요.</p>
+  <p>처음 사용 시 Claude API 키를 입력해주세요.<br>키는 기기에만 저장돼요.</p>
   <div class="api-input-wrap">
     <label>Claude API Key</label>
     <input type="password" id="api-key-input" placeholder="sk-ant-..." autocomplete="off">
   </div>
   <button class="btn primary" onclick="saveApiKey()">시작하기</button>
-  <p style="font-size:12px; color:#bbb; margin-top:16px;">
-    키 발급: <a href="https://console.anthropic.com" style="color:#888;">console.anthropic.com</a>
-  </p>
+  <p style="font-size:12px; color:#bbb; margin-top:16px;">키 발급: <a href="https://console.anthropic.com" style="color:#888;">console.anthropic.com</a></p>
 </div>
 
-<!-- 메인 앱 -->
 <div id="app">
   <div class="header">
     <h1 id="header-title">검색</h1>
   </div>
 
   <div class="content">
+
     <!-- 검색 화면 -->
     <div class="screen active" id="screen-search">
       <div class="card">
-        <p style="font-size:13px; color:#888; margin-bottom:12px;">사진을 찍으면 AI가 등록된 항목 중 유사한 것을 찾아줘요</p>
+        <p style="font-size:13px; color:#888; margin-bottom:12px;">사진을 찍으면 등록된 항목 중 가장 유사한 것을 찾아줘요</p>
         <div class="camera-box" onclick="document.getElementById('search-file').click()" id="search-camera-box">
           <div class="icon">📷</div>
           <p>탭해서 사진 촬영 또는 선택</p>
@@ -128,12 +124,9 @@
         <input type="file" id="search-file" accept="image/*" capture="environment" style="display:none" onchange="handleSearchImage(this)">
         <div id="search-preview-wrap" style="display:none; margin-top:12px;">
           <img id="search-preview-img" class="preview-img" alt="검색 이미지">
-          <button class="btn primary" style="margin-top:10px;" onclick="runSearch()" id="search-btn">
-            🔍 AI로 유사 MyLens
-          </button>
+          <button class="btn primary" style="margin-top:10px;" onclick="runSearch()" id="search-btn">🔍 유사 항목 찾기</button>
         </div>
       </div>
-
       <div id="search-results-wrap" style="display:none;">
         <div class="card">
           <p class="section-title">검색 결과</p>
@@ -146,13 +139,13 @@
     <div class="screen" id="screen-register">
       <div class="card">
         <div class="form-group">
-          <label class="form-label">사진</label>
-          <div class="camera-box" onclick="document.getElementById('reg-file').click()" id="reg-camera-box">
-            <div class="icon">📷</div>
-            <p>탭해서 사진 촬영 또는 선택</p>
+          <label class="form-label">사진 (여러 장 가능, 최대 5장)</label>
+          <div class="img-grid" id="reg-img-grid">
+            <button class="add-photo-btn" onclick="document.getElementById('reg-file').click()" id="add-photo-btn">
+              📷<span>추가</span>
+            </button>
           </div>
           <input type="file" id="reg-file" accept="image/*" capture="environment" style="display:none" onchange="handleRegImage(this)">
-          <img id="reg-preview-img" class="preview-img" style="display:none; margin-top:10px;" alt="등록 이미지">
         </div>
         <div class="form-group">
           <label class="form-label">이름 *</label>
@@ -160,11 +153,9 @@
         </div>
         <div class="form-group">
           <label class="form-label">설명 (선택)</label>
-          <textarea id="reg-desc" placeholder="예: 빨간색 작은 원형 부품, 플라스틱 재질"></textarea>
+          <textarea id="reg-desc" placeholder="색상, 크기, 용도 등 간단히 적어두면 검색에 도움돼요"></textarea>
         </div>
-        <button class="btn primary" onclick="registerPart()" id="reg-btn">
-          ✅ 등록하기
-        </button>
+        <button class="btn primary" onclick="registerItem()" id="reg-btn">✅ 등록하기</button>
       </div>
     </div>
 
@@ -173,69 +164,65 @@
       <div class="card">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
           <p style="font-size:14px; font-weight:500;">등록된 항목</p>
-          <span class="badge" id="part-count">0개</span>
+          <span class="badge" id="item-count">0개</span>
         </div>
-        <div id="parts-list"></div>
+        <div id="items-list"></div>
       </div>
-      <button class="btn secondary" style="margin-top:4px;" onclick="resetApiKey()">
-        ⚙️ API 키 변경
-      </button>
+      <button class="btn secondary" style="margin-top:4px;" onclick="resetApiKey()">⚙️ API 키 변경</button>
     </div>
+
   </div>
 
-  <!-- 탭바 -->
   <div class="tab-bar">
-    <div class="tab active" onclick="switchTab('search', '검색')" id="tab-search">
-      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      검색
+    <div class="tab active" onclick="switchTab('search','검색')" id="tab-search">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>검색
     </div>
-    <div class="tab" onclick="switchTab('register', '등록')" id="tab-register">
-      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-      등록
+    <div class="tab" onclick="switchTab('register','등록')" id="tab-register">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>등록
     </div>
-    <div class="tab" onclick="switchTab('list', '목록')" id="tab-list">
-      <svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
-      목록
+    <div class="tab" onclick="switchTab('list','목록')" id="tab-list">
+      <svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>목록
     </div>
   </div>
 </div>
 
 <script>
-let parts = [];
+let items = [];
 let searchBase64 = null;
-let regBase64 = null;
+let regImages = []; // [{base64, preview}]
 let API_KEY = '';
+const MAX_PHOTOS = 5;
+const CANDIDATE_COUNT = 5;
 
 function init() {
-  API_KEY = localStorage.getItem('claude_api_key') || '';
-  const raw = localStorage.getItem('parts_data');
-  parts = raw ? JSON.parse(raw) : [];
+  API_KEY = localStorage.getItem('mylens_api_key') || '';
+  const raw = localStorage.getItem('mylens_items');
+  items = raw ? JSON.parse(raw) : [];
+  if (API_KEY) showApp();
+}
 
-  if (API_KEY) {
-    document.getElementById('settings-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'flex';
-    document.getElementById('app').style.flexDirection = 'column';
-  }
+function showApp() {
+  document.getElementById('settings-screen').style.display = 'none';
+  const app = document.getElementById('app');
+  app.style.display = 'flex';
+  app.style.flexDirection = 'column';
 }
 
 function saveApiKey() {
   const key = document.getElementById('api-key-input').value.trim();
-  if (!key.startsWith('sk-ant-')) {
-    alert('올바른 API 키를 입력해주세요 (sk-ant- 로 시작)');
-    return;
-  }
-  localStorage.setItem('claude_api_key', key);
+  if (!key.startsWith('sk-ant-')) { alert('올바른 API 키를 입력해주세요 (sk-ant- 로 시작)'); return; }
+  localStorage.setItem('mylens_api_key', key);
   API_KEY = key;
-  document.getElementById('settings-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'flex';
-  document.getElementById('app').style.flexDirection = 'column';
+  showApp();
 }
 
 function resetApiKey() {
   if (!confirm('API 키를 초기화할까요?')) return;
-  localStorage.removeItem('claude_api_key');
+  localStorage.removeItem('mylens_api_key');
   location.reload();
 }
+
+function saveItems() { localStorage.setItem('mylens_items', JSON.stringify(items)); }
 
 function switchTab(tab, title) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -244,34 +231,6 @@ function switchTab(tab, title) {
   document.getElementById('screen-' + tab).classList.add('active');
   document.getElementById('header-title').textContent = title;
   if (tab === 'list') renderList();
-}
-
-function saveParts() {
-  localStorage.setItem('parts_data', JSON.stringify(parts));
-}
-
-function handleRegImage(input) {
-  const file = input.files[0];
-  if (!file) return;
-  resizeImage(file, 800, base64 => {
-    regBase64 = base64;
-    const img = document.getElementById('reg-preview-img');
-    img.src = 'data:image/jpeg;base64,' + base64;
-    img.style.display = 'block';
-    document.getElementById('reg-camera-box').style.display = 'none';
-  });
-}
-
-function handleSearchImage(input) {
-  const file = input.files[0];
-  if (!file) return;
-  resizeImage(file, 800, base64 => {
-    searchBase64 = base64;
-    const img = document.getElementById('search-preview-img');
-    img.src = 'data:image/jpeg;base64,' + base64;
-    document.getElementById('search-preview-wrap').style.display = 'block';
-    document.getElementById('search-results-wrap').style.display = 'none';
-  });
 }
 
 function resizeImage(file, maxSize, callback) {
@@ -287,39 +246,94 @@ function resizeImage(file, maxSize, callback) {
       }
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      callback(canvas.toDataURL('image/jpeg', 0.8).split(',')[1]);
+      callback(canvas.toDataURL('image/jpeg', 0.75).split(',')[1]);
     };
     img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
 
-async function callClaude(base64) {
+// 등록 이미지 처리
+function handleRegImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (regImages.length >= MAX_PHOTOS) { alert(`최대 ${MAX_PHOTOS}장까지 등록 가능해요`); return; }
+  resizeImage(file, 600, base64 => {
+    regImages.push(base64);
+    renderRegGrid();
+  });
+  input.value = '';
+}
+
+function renderRegGrid() {
+  const grid = document.getElementById('reg-img-grid');
+  grid.innerHTML = '';
+  regImages.forEach((b64, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'img-thumb-wrap';
+    wrap.innerHTML = `<img src="data:image/jpeg;base64,${b64}" alt="사진 ${i+1}">
+      <button class="del-btn" onclick="removeRegImage(${i})">×</button>`;
+    grid.appendChild(wrap);
+  });
+  if (regImages.length < MAX_PHOTOS) {
+    const addBtn = document.createElement('button');
+    addBtn.className = 'add-photo-btn';
+    addBtn.innerHTML = '📷<span>추가</span>';
+    addBtn.onclick = () => document.getElementById('reg-file').click();
+    grid.appendChild(addBtn);
+  }
+}
+
+function removeRegImage(idx) {
+  regImages.splice(idx, 1);
+  renderRegGrid();
+}
+
+// 검색 이미지 처리
+function handleSearchImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  resizeImage(file, 600, base64 => {
+    searchBase64 = base64;
+    document.getElementById('search-preview-img').src = 'data:image/jpeg;base64,' + base64;
+    document.getElementById('search-preview-wrap').style.display = 'block';
+    document.getElementById('search-results-wrap').style.display = 'none';
+  });
+}
+
+// API 호출 (짧은 프롬프트)
+async function callAPI(messages) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5',
-      max_tokens: 1000,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
-          { type: 'text', text: '이 이미지를 분석해서 JSON으로만 응답해. 마크다운 없이 순수 JSON만 출력해.\n{"shape":"형태(원형/직사각형/L자형/원통형 등)","color":"주색상","size":"크기(소/중/대)","material":"재질(금속/플라스틱/고무/천 등)","features":["특징1","특징2","특징3"],"keywords":["검색키워드1","검색키워드2","검색키워드3"]}' }
-        ]
-      }]
-    })
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': API_KEY,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({ model: 'claude-haiku-4-5', max_tokens: 500, messages })
   });
   const data = await res.json();
   if (data.error) throw new Error(data.error.message);
-  const text = data.content[0].text.replace(/```json|```/g, '').trim();
-  return JSON.parse(text);
+  return data.content[0].text;
 }
 
-async function registerPart() {
+// 이미지 특징 추출 (등록용, 토큰 최소화)
+async function extractFeatures(base64List) {
+  const content = base64List.map(b64 => ({
+    type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 }
+  }));
+  content.push({ type: 'text', text: 'JSON만 출력. {"shape":"형태","color":"색상","material":"재질","keywords":["키워드1","키워드2","키워드3"]}' });
+  const text = await callAPI([{ role: 'user', content }]);
+  try { return JSON.parse(text.replace(/```json|```/g, '').trim()); }
+  catch { return { keywords: [] }; }
+}
+
+// 등록
+async function registerItem() {
   const name = document.getElementById('reg-name').value.trim();
   const desc = document.getElementById('reg-desc').value.trim();
-  if (!regBase64) { alert('사진을 먼저 선택해주세요'); return; }
+  if (regImages.length === 0) { alert('사진을 먼저 추가해주세요'); return; }
   if (!name) { alert('이름을 입력해주세요'); return; }
 
   const btn = document.getElementById('reg-btn');
@@ -327,24 +341,21 @@ async function registerPart() {
   btn.textContent = 'AI 분석 중...';
 
   try {
-    const features = await callClaude(regBase64);
-    const part = {
+    const features = await extractFeatures(regImages);
+    const item = {
       id: Date.now(),
       name, desc,
-      image: 'data:image/jpeg;base64,' + regBase64,
+      images: regImages.map(b64 => 'data:image/jpeg;base64,' + b64),
       features,
       createdAt: new Date().toISOString()
     };
-    parts.push(part);
-    saveParts();
+    items.push(item);
+    saveItems();
 
+    regImages = [];
     document.getElementById('reg-name').value = '';
     document.getElementById('reg-desc').value = '';
-    document.getElementById('reg-preview-img').style.display = 'none';
-    document.getElementById('reg-camera-box').style.display = 'block';
-    document.getElementById('reg-file').value = '';
-    regBase64 = null;
-
+    renderRegGrid();
     alert(`"${name}" 등록 완료!`);
   } catch(e) {
     alert('오류: ' + e.message);
@@ -354,83 +365,116 @@ async function registerPart() {
   }
 }
 
+// 검색 - 2단계
 async function runSearch() {
   if (!searchBase64) return;
-  if (parts.length === 0) {
-    alert('먼저 항목을 등록해주세요');
-    return;
-  }
+  if (items.length === 0) { alert('먼저 항목을 등록해주세요'); return; }
 
   const btn = document.getElementById('search-btn');
   btn.disabled = true;
-  btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;margin:0 auto;border-width:2px;"></div>';
   document.getElementById('search-results-wrap').style.display = 'none';
 
   try {
-    const sf = await callClaude(searchBase64);
+    // 1단계: 검색 이미지 특징 추출
+    btn.textContent = '🔍 분석 중... (1/2)';
+    const sf = await extractFeatures([searchBase64]);
 
-    const scored = parts.map(part => {
+    // 2단계: 텍스트 특징으로 후보 추리기
+    const candidates = items.map(item => {
+      const pf = item.features || {};
       let score = 0;
-      const pf = part.features || {};
-      if (sf.shape && pf.shape && sf.shape === pf.shape) score += 30;
-      if (sf.color && pf.color && sf.color === pf.color) score += 20;
-      if (sf.size && pf.size && sf.size === pf.size) score += 10;
-      if (sf.material && pf.material && sf.material === pf.material) score += 15;
-      (sf.keywords || []).forEach(k => { if ((pf.keywords || []).some(p => p.includes(k) || k.includes(p))) score += 8; });
-      (sf.features || []).forEach(f => { if ((pf.features || []).some(p => p.includes(f) || f.includes(p))) score += 5; });
-      return { ...part, score: Math.min(score, 100) };
-    }).sort((a, b) => b.score - a.score).slice(0, 5);
+      if (sf.shape && pf.shape && sf.shape === pf.shape) score += 35;
+      if (sf.color && pf.color && sf.color === pf.color) score += 25;
+      if (sf.material && pf.material && sf.material === pf.material) score += 20;
+      (sf.keywords || []).forEach(k => {
+        if ((pf.keywords || []).some(p => p.includes(k) || k.includes(p))) score += 10;
+      });
+      if (item.desc && sf.keywords && sf.keywords.some(k => item.desc.includes(k))) score += 5;
+      return { ...item, textScore: score };
+    }).sort((a, b) => b.textScore - a.textScore).slice(0, CANDIDATE_COUNT);
 
-    const list = document.getElementById('search-results-list');
-    if (scored.length === 0 || scored[0].score === 0) {
-      list.innerHTML = '<div class="empty" style="padding:20px 0;"><span class="icon">😕</span>유사한 항목을 찾지 못했어요</div>';
-    } else {
-      list.innerHTML = scored.map(r => `
-        <div class="result-item">
-          <div class="result-thumb">${r.image ? `<img src="${r.image}" alt="${r.name}">` : '📦'}</div>
-          <div class="result-info">
-            <div class="result-name">${r.name}</div>
-            <div class="result-desc">${r.desc || '설명 없음'}</div>
-            <div class="score-wrap">
-              <div class="score-bar"><div class="score-fill" style="width:${r.score}%"></div></div>
-              <div class="score-text">유사도 ${r.score}%</div>
-            </div>
-          </div>
-        </div>
-      `).join('');
-    }
-    document.getElementById('search-results-wrap').style.display = 'block';
+    // 3단계: 후보 이미지들과 직접 비교 (Claude가 눈으로 비교)
+    btn.textContent = '🔍 비교 중... (2/2)';
+    const content = [
+      { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: searchBase64 } },
+      { type: 'text', text: `이것이 검색 이미지야. 아래 ${candidates.length}개 항목 이미지들과 비교해서 유사도를 0~100으로 평가해줘. JSON 배열만 출력해: [{"idx":0,"score":85},{"idx":1,"score":40},...] 형태로.` }
+    ];
+    candidates.forEach((item, i) => {
+      const imgSrc = item.images && item.images[0];
+      if (imgSrc) {
+        content.push({ type: 'text', text: `항목 ${i} (${item.name}):` });
+        content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imgSrc.split(',')[1] } });
+      }
+    });
+
+    const compareText = await callAPI([{ role: 'user', content }]);
+    let scores = [];
+    try { scores = JSON.parse(compareText.replace(/```json|```/g, '').trim()); }
+    catch { scores = candidates.map((_, i) => ({ idx: i, score: candidates[i].textScore })); }
+
+    const results = scores
+      .map(s => ({ ...candidates[s.idx], finalScore: s.score }))
+      .sort((a, b) => b.finalScore - a.finalScore);
+
+    renderResults(results);
   } catch(e) {
     alert('오류: ' + e.message);
   } finally {
     btn.disabled = false;
-    btn.textContent = '🔍 AI로 유사 MyLens';
+    btn.textContent = '🔍 유사 항목 찾기';
   }
 }
 
+function scoreColor(score) {
+  if (score >= 70) return '#22c55e';
+  if (score >= 40) return '#f59e0b';
+  return '#ef4444';
+}
+
+function renderResults(results) {
+  const list = document.getElementById('search-results-list');
+  if (!results.length || results[0].finalScore === 0) {
+    list.innerHTML = '<div class="empty" style="padding:20px 0;"><span class="icon">😕</span>유사한 항목을 찾지 못했어요</div>';
+  } else {
+    list.innerHTML = results.map(r => `
+      <div class="result-item">
+        <div class="result-thumb">${r.images && r.images[0] ? `<img src="${r.images[0]}" alt="${r.name}">` : '📦'}</div>
+        <div class="result-info">
+          <div class="result-name">${r.name}</div>
+          <div class="result-desc">${r.desc || ''}</div>
+          <div class="score-bar"><div class="score-fill" style="width:${r.finalScore}%; background:${scoreColor(r.finalScore)};"></div></div>
+          <div class="score-text">유사도 ${r.finalScore}%</div>
+        </div>
+      </div>
+    `).join('');
+  }
+  document.getElementById('search-results-wrap').style.display = 'block';
+}
+
 function renderList() {
-  document.getElementById('part-count').textContent = parts.length + '개';
-  const container = document.getElementById('parts-list');
-  if (parts.length === 0) {
+  document.getElementById('item-count').textContent = items.length + '개';
+  const container = document.getElementById('items-list');
+  if (items.length === 0) {
     container.innerHTML = '<div class="empty"><span class="icon">📦</span>아직 등록된 항목이 없어요</div>';
     return;
   }
-  container.innerHTML = parts.map(p => `
-    <div class="part-item">
-      <div class="part-thumb">${p.image ? `<img src="${p.image}" alt="${p.name}">` : '📦'}</div>
-      <div class="part-info">
-        <div class="part-name">${p.name}</div>
-        <div class="part-desc">${p.desc || '설명 없음'}</div>
+  container.innerHTML = items.map(item => `
+    <div class="item-row">
+      <div class="item-thumb">${item.images && item.images[0] ? `<img src="${item.images[0]}" alt="${item.name}">` : '📦'}</div>
+      <div class="item-info">
+        <div class="item-name">${item.name}</div>
+        <div class="item-desc">${item.desc || '설명 없음'}</div>
+        <div class="item-photos">사진 ${item.images ? item.images.length : 0}장</div>
       </div>
-      <button class="delete-btn" onclick="deletePart(${p.id})" aria-label="삭제">🗑️</button>
+      <button class="delete-btn" onclick="deleteItem(${item.id})" aria-label="삭제">🗑️</button>
     </div>
   `).join('');
 }
 
-function deletePart(id) {
+function deleteItem(id) {
   if (!confirm('이 항목을 삭제할까요?')) return;
-  parts = parts.filter(p => p.id !== id);
-  saveParts();
+  items = items.filter(i => i.id !== id);
+  saveItems();
   renderList();
 }
 
