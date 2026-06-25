@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="부품 찾기">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <title>부품 찾기</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #1a1a1a; max-width: 480px; margin: 0 auto; min-height: 100vh; background: #fff; }
+
+    /* 설정 화면 */
+    #settings-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 32px 24px; }
+    #settings-screen h1 { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+    #settings-screen p { font-size: 14px; color: #666; text-align: center; margin-bottom: 32px; line-height: 1.6; }
+    .api-input-wrap { width: 100%; margin-bottom: 12px; }
+    .api-input-wrap label { font-size: 13px; color: #444; display: block; margin-bottom: 6px; }
+    .api-input-wrap input { width: 100%; padding: 12px 14px; border: 1px solid #ddd; border-radius: 10px; font-size: 14px; }
+
+    /* 앱 레이아웃 */
+    #app { display: none; flex-direction: column; min-height: 100vh; }
+    .header { padding: 16px 20px 12px; border-bottom: 0.5px solid #e5e5e5; }
+    .header h1 { font-size: 18px; font-weight: 600; }
+    .content { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 80px; }
+    .tab-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; display: flex; background: #fff; border-top: 0.5px solid #e5e5e5; padding-bottom: env(safe-area-inset-bottom); }
+    .tab { flex: 1; padding: 10px 8px 8px; text-align: center; font-size: 11px; color: #999; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .tab svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .tab.active { color: #1a1a1a; }
+
+    /* 화면 전환 */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* 공통 컴포넌트 */
+    .card { background: #fff; border: 0.5px solid #e5e5e5; border-radius: 14px; padding: 16px 18px; margin-bottom: 12px; }
+    .btn { width: 100%; padding: 13px; border-radius: 10px; font-size: 15px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.15s; border: none; }
+    .btn:active { opacity: 0.7; }
+    .btn.primary { background: #1a1a1a; color: #fff; }
+    .btn.secondary { background: #f0f0f0; color: #1a1a1a; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .camera-box { border: 1.5px dashed #ccc; border-radius: 12px; padding: 36px 20px; text-align: center; cursor: pointer; transition: background 0.15s; }
+    .camera-box:active { background: #f5f5f5; }
+    .camera-box .icon { font-size: 36px; margin-bottom: 8px; }
+    .camera-box p { font-size: 13px; color: #888; }
+
+    .preview-img { width: 100%; height: 200px; object-fit: cover; border-radius: 10px; border: 0.5px solid #e5e5e5; }
+
+    input[type="text"], textarea { width: 100%; padding: 11px 13px; border: 1px solid #ddd; border-radius: 10px; font-size: 14px; color: #1a1a1a; background: #fff; -webkit-appearance: none; }
+    input[type="text"]:focus, textarea:focus { outline: none; border-color: #1a1a1a; }
+    textarea { resize: none; height: 72px; line-height: 1.5; }
+    .form-label { font-size: 13px; color: #555; display: block; margin-bottom: 5px; }
+    .form-group { margin-bottom: 14px; }
+
+    /* 부품 목록 */
+    .part-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 0.5px solid #f0f0f0; }
+    .part-item:last-child { border-bottom: none; }
+    .part-thumb { width: 52px; height: 52px; border-radius: 10px; border: 0.5px solid #e5e5e5; object-fit: cover; background: #f5f5f5; display: flex; align-items: center; justify-content: center; font-size: 22px; overflow: hidden; flex-shrink: 0; }
+    .part-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .part-info { flex: 1; min-width: 0; }
+    .part-name { font-size: 14px; font-weight: 500; }
+    .part-desc { font-size: 12px; color: #888; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .delete-btn { background: none; border: none; cursor: pointer; color: #bbb; padding: 6px; font-size: 18px; }
+
+    /* 검색 결과 */
+    .result-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 0.5px solid #f0f0f0; }
+    .result-item:last-child { border-bottom: none; }
+    .result-thumb { width: 60px; height: 60px; border-radius: 10px; border: 0.5px solid #e5e5e5; object-fit: cover; background: #f5f5f5; display: flex; align-items: center; justify-content: center; font-size: 26px; overflow: hidden; flex-shrink: 0; }
+    .result-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .result-info { flex: 1; min-width: 0; }
+    .result-name { font-size: 14px; font-weight: 500; }
+    .result-desc { font-size: 12px; color: #888; margin-top: 2px; }
+    .score-wrap { margin-top: 6px; }
+    .score-bar { height: 4px; border-radius: 2px; background: #f0f0f0; }
+    .score-fill { height: 100%; border-radius: 2px; background: #1a1a1a; }
+    .score-text { font-size: 11px; color: #888; margin-top: 3px; }
+
+    /* 로딩 */
+    .loading { text-align: center; padding: 32px 20px; color: #888; font-size: 14px; }
+    .spinner { width: 28px; height: 28px; border: 2px solid #e5e5e5; border-top-color: #1a1a1a; border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .empty { text-align: center; padding: 48px 20px; color: #aaa; font-size: 14px; line-height: 1.8; }
+    .empty .icon { font-size: 44px; display: block; margin-bottom: 12px; }
+
+    .badge { display: inline-block; font-size: 12px; padding: 2px 10px; border-radius: 20px; background: #f0f0f0; color: #555; }
+
+    .section-title { font-size: 13px; font-weight: 500; color: #888; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+
+<!-- API 키 설정 화면 -->
+<div id="settings-screen">
+  <div style="font-size: 48px; margin-bottom: 16px;">🔧</div>
+  <h1>부품 찾기</h1>
+  <p>처음 사용 시 Claude API 키를 입력해주세요.<br>키는 기기에만 저장되며 외부로 전송되지 않아요.</p>
+  <div class="api-input-wrap">
+    <label>Claude API Key</label>
+    <input type="password" id="api-key-input" placeholder="sk-ant-..." autocomplete="off">
+  </div>
+  <button class="btn primary" onclick="saveApiKey()">시작하기</button>
+  <p style="font-size:12px; color:#bbb; margin-top:16px;">
+    키 발급: <a href="https://console.anthropic.com" style="color:#888;">console.anthropic.com</a>
+  </p>
+</div>
+
+<!-- 메인 앱 -->
+<div id="app">
+  <div class="header">
+    <h1 id="header-title">부품 검색</h1>
+  </div>
+
+  <div class="content">
+    <!-- 검색 화면 -->
+    <div class="screen active" id="screen-search">
+      <div class="card">
+        <p style="font-size:13px; color:#888; margin-bottom:12px;">사진을 찍으면 AI가 유사한 부품을 찾아줘요</p>
+        <div class="camera-box" onclick="document.getElementById('search-file').click()" id="search-camera-box">
+          <div class="icon">📷</div>
+          <p>탭해서 사진 촬영 또는 선택</p>
+        </div>
+        <input type="file" id="search-file" accept="image/*" capture="environment" style="display:none" onchange="handleSearchImage(this)">
+        <div id="search-preview-wrap" style="display:none; margin-top:12px;">
+          <img id="search-preview-img" class="preview-img" alt="검색 이미지">
+          <button class="btn primary" style="margin-top:10px;" onclick="runSearch()" id="search-btn">
+            🔍 AI로 유사 부품 찾기
+          </button>
+        </div>
+      </div>
+
+      <div id="search-results-wrap" style="display:none;">
+        <div class="card">
+          <p class="section-title">검색 결과</p>
+          <div id="search-results-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 등록 화면 -->
+    <div class="screen" id="screen-register">
+      <div class="card">
+        <div class="form-group">
+          <label class="form-label">부품 사진</label>
+          <div class="camera-box" onclick="document.getElementById('reg-file').click()" id="reg-camera-box">
+            <div class="icon">📷</div>
+            <p>탭해서 사진 촬영 또는 선택</p>
+          </div>
+          <input type="file" id="reg-file" accept="image/*" capture="environment" style="display:none" onchange="handleRegImage(this)">
+          <img id="reg-preview-img" class="preview-img" style="display:none; margin-top:10px;" alt="등록 이미지">
+        </div>
+        <div class="form-group">
+          <label class="form-label">부품 이름 *</label>
+          <input type="text" id="reg-name" placeholder="예: 좌측 구동 모터">
+        </div>
+        <div class="form-group">
+          <label class="form-label">설명 (선택)</label>
+          <textarea id="reg-desc" placeholder="예: AMR 좌측 바퀴 구동용 DC 모터, 24V"></textarea>
+        </div>
+        <button class="btn primary" onclick="registerPart()" id="reg-btn">
+          ✅ 등록하기
+        </button>
+      </div>
+    </div>
+
+    <!-- 목록 화면 -->
+    <div class="screen" id="screen-list">
+      <div class="card">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+          <p style="font-size:14px; font-weight:500;">등록된 부품</p>
+          <span class="badge" id="part-count">0개</span>
+        </div>
+        <div id="parts-list"></div>
+      </div>
+      <button class="btn secondary" style="margin-top:4px;" onclick="resetApiKey()">
+        ⚙️ API 키 변경
+      </button>
+    </div>
+  </div>
+
+  <!-- 탭바 -->
+  <div class="tab-bar">
+    <div class="tab active" onclick="switchTab('search', '부품 검색')" id="tab-search">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      검색
+    </div>
+    <div class="tab" onclick="switchTab('register', '부품 등록')" id="tab-register">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      등록
+    </div>
+    <div class="tab" onclick="switchTab('list', '부품 목록')" id="tab-list">
+      <svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+      목록
+    </div>
+  </div>
+</div>
+
+<script>
+let parts = [];
+let searchBase64 = null;
+let regBase64 = null;
+let API_KEY = '';
+
+function init() {
+  API_KEY = localStorage.getItem('claude_api_key') || '';
+  const raw = localStorage.getItem('parts_data');
+  parts = raw ? JSON.parse(raw) : [];
+
+  if (API_KEY) {
+    document.getElementById('settings-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('app').style.flexDirection = 'column';
+  }
+}
+
+function saveApiKey() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key.startsWith('sk-ant-')) {
+    alert('올바른 API 키를 입력해주세요 (sk-ant- 로 시작)');
+    return;
+  }
+  localStorage.setItem('claude_api_key', key);
+  API_KEY = key;
+  document.getElementById('settings-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('app').style.flexDirection = 'column';
+}
+
+function resetApiKey() {
+  if (!confirm('API 키를 초기화할까요?')) return;
+  localStorage.removeItem('claude_api_key');
+  location.reload();
+}
+
+function switchTab(tab, title) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('screen-' + tab).classList.add('active');
+  document.getElementById('header-title').textContent = title;
+  if (tab === 'list') renderList();
+}
+
+function saveParts() {
+  localStorage.setItem('parts_data', JSON.stringify(parts));
+}
+
+function handleRegImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  resizeImage(file, 800, base64 => {
+    regBase64 = base64;
+    const img = document.getElementById('reg-preview-img');
+    img.src = 'data:image/jpeg;base64,' + base64;
+    img.style.display = 'block';
+    document.getElementById('reg-camera-box').style.display = 'none';
+  });
+}
+
+function handleSearchImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  resizeImage(file, 800, base64 => {
+    searchBase64 = base64;
+    const img = document.getElementById('search-preview-img');
+    img.src = 'data:image/jpeg;base64,' + base64;
+    document.getElementById('search-preview-wrap').style.display = 'block';
+    document.getElementById('search-results-wrap').style.display = 'none';
+  });
+}
+
+function resizeImage(file, maxSize, callback) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      if (w > maxSize || h > maxSize) {
+        if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
+        else { w = Math.round(w * maxSize / h); h = maxSize; }
+      }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      callback(canvas.toDataURL('image/jpeg', 0.8).split(',')[1]);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function callClaude(base64) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5',
+      max_tokens: 1000,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
+          { type: 'text', text: '이 부품 이미지를 분석해서 JSON으로만 응답해. 마크다운 없이 순수 JSON만 출력해.\n{"shape":"형태(원형/직사각형/L자형/원통형 등)","color":"주색상","size":"크기(소/중/대)","material":"재질(금속/플라스틱/고무 등)","features":["특징1","특징2","특징3"],"keywords":["검색키워드1","검색키워드2","검색키워드3"]}' }
+        ]
+      }]
+    })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  const text = data.content[0].text.replace(/```json|```/g, '').trim();
+  return JSON.parse(text);
+}
+
+async function registerPart() {
+  const name = document.getElementById('reg-name').value.trim();
+  const desc = document.getElementById('reg-desc').value.trim();
+  if (!regBase64) { alert('사진을 먼저 선택해주세요'); return; }
+  if (!name) { alert('부품 이름을 입력해주세요'); return; }
+
+  const btn = document.getElementById('reg-btn');
+  btn.disabled = true;
+  btn.textContent = 'AI 분석 중...';
+
+  try {
+    const features = await callClaude(regBase64);
+    const part = {
+      id: Date.now(),
+      name, desc,
+      image: 'data:image/jpeg;base64,' + regBase64,
+      features,
+      createdAt: new Date().toISOString()
+    };
+    parts.push(part);
+    saveParts();
+
+    document.getElementById('reg-name').value = '';
+    document.getElementById('reg-desc').value = '';
+    document.getElementById('reg-preview-img').style.display = 'none';
+    document.getElementById('reg-camera-box').style.display = 'block';
+    document.getElementById('reg-file').value = '';
+    regBase64 = null;
+
+    alert(`"${name}" 등록 완료!`);
+  } catch(e) {
+    alert('오류: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✅ 등록하기';
+  }
+}
+
+async function runSearch() {
+  if (!searchBase64) return;
+  if (parts.length === 0) {
+    alert('먼저 부품을 등록해주세요');
+    return;
+  }
+
+  const btn = document.getElementById('search-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;margin:0 auto;border-width:2px;"></div>';
+  document.getElementById('search-results-wrap').style.display = 'none';
+
+  try {
+    const sf = await callClaude(searchBase64);
+
+    const scored = parts.map(part => {
+      let score = 0;
+      const pf = part.features || {};
+      if (sf.shape && pf.shape && sf.shape === pf.shape) score += 30;
+      if (sf.color && pf.color && sf.color === pf.color) score += 20;
+      if (sf.size && pf.size && sf.size === pf.size) score += 10;
+      if (sf.material && pf.material && sf.material === pf.material) score += 15;
+      (sf.keywords || []).forEach(k => { if ((pf.keywords || []).some(p => p.includes(k) || k.includes(p))) score += 8; });
+      (sf.features || []).forEach(f => { if ((pf.features || []).some(p => p.includes(f) || f.includes(p))) score += 5; });
+      return { ...part, score: Math.min(score, 100) };
+    }).sort((a, b) => b.score - a.score).slice(0, 5);
+
+    const list = document.getElementById('search-results-list');
+    if (scored.length === 0 || scored[0].score === 0) {
+      list.innerHTML = '<div class="empty" style="padding:20px 0;"><span class="icon">😕</span>유사한 부품을 찾지 못했어요</div>';
+    } else {
+      list.innerHTML = scored.map(r => `
+        <div class="result-item">
+          <div class="result-thumb">${r.image ? `<img src="${r.image}" alt="${r.name}">` : '📦'}</div>
+          <div class="result-info">
+            <div class="result-name">${r.name}</div>
+            <div class="result-desc">${r.desc || '설명 없음'}</div>
+            <div class="score-wrap">
+              <div class="score-bar"><div class="score-fill" style="width:${r.score}%"></div></div>
+              <div class="score-text">유사도 ${r.score}%</div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+    document.getElementById('search-results-wrap').style.display = 'block';
+  } catch(e) {
+    alert('오류: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔍 AI로 유사 부품 찾기';
+  }
+}
+
+function renderList() {
+  document.getElementById('part-count').textContent = parts.length + '개';
+  const container = document.getElementById('parts-list');
+  if (parts.length === 0) {
+    container.innerHTML = '<div class="empty"><span class="icon">📦</span>아직 등록된 부품이 없어요</div>';
+    return;
+  }
+  container.innerHTML = parts.map(p => `
+    <div class="part-item">
+      <div class="part-thumb">${p.image ? `<img src="${p.image}" alt="${p.name}">` : '📦'}</div>
+      <div class="part-info">
+        <div class="part-name">${p.name}</div>
+        <div class="part-desc">${p.desc || '설명 없음'}</div>
+      </div>
+      <button class="delete-btn" onclick="deletePart(${p.id})" aria-label="삭제">🗑️</button>
+    </div>
+  `).join('');
+}
+
+function deletePart(id) {
+  if (!confirm('이 부품을 삭제할까요?')) return;
+  parts = parts.filter(p => p.id !== id);
+  saveParts();
+  renderList();
+}
+
+init();
+</script>
+</body>
+</html>
